@@ -1,0 +1,86 @@
+<!-- pages/create_item/create_item.wxml - 清新简约风 -->
+<view class="container">
+  <!-- 页面头部 -->
+  <view class="page-header">
+    <text class="page-title">{{mode === 'edit' ? '编辑物品' : '添加物品'}}</text>
+    <text class="page-subtitle">{{mode === 'edit' ? '修改物品信息' : '记录新物品到库存'}}</text>
+  </view>
+
+  <view class="form-card">
+    <view wx:if="{{isLoading}}" class="loading-in-card">
+      <view class="loading-spinner"></view>
+      <text>正在加载...</text>
+    </view>
+
+    <view wx:else>
+      <!-- 物品名称 -->
+      <view class="form-item">
+        <text class="label label-required">物品名称</text>
+        <input 
+          class="input" 
+          type="text" 
+          placeholder="例如：牛奶、鸡蛋、纸巾" 
+          placeholder-class="placeholder"
+          bindinput="onNameInput"
+          value="{{name}}"
+        />
+      </view>
+
+      <!-- 数量 -->
+      <view class="form-item">
+        <text class="label">数量</text>
+        <view class="quantity-selector">
+          <button class="quantity-btn" bindtap="decreaseQuantity">−</button>
+          <input 
+            class="quantity-input"
+            type="number"
+            value="{{quantity}}"
+            bindinput="onQuantityInput"
+          />
+          <button class="quantity-btn" bindtap="increaseQuantity">+</button>
+        </view>
+      </view>
+
+      <!-- 保质期 (可选) -->
+      <view class="form-item">
+        <text class="label">保质期</text>
+        <picker 
+          mode="date" 
+          value="{{expiryDate}}" 
+          start="{{startDate}}"
+          bindchange="onExpiryDateChange"
+        >
+          <view class="picker {{expiryDate ? 'has-value' : ''}}">
+            {{expiryDate ? expiryDate : '请选择过期日期'}}
+          </view>
+        </picker>
+        <text class="hint">设置保质期后，我们会自动提醒您</text>
+      </view>
+
+      <!-- 备注 (可选) -->
+      <view class="form-item">
+        <text class="label">备注</text>
+        <textarea 
+          class="textarea"
+          placeholder="添加备注信息（可选）"
+          placeholder-class="placeholder"
+          bindinput="onRemarkInput"
+          value="{{remark}}"
+          maxlength="200"
+        />
+      </view>
+
+      <!-- 保存按钮 -->
+      <view class="button-area">
+        <button 
+          type="primary" 
+          bindtap="onSubmit"
+          loading="{{isSaving}}"
+          disabled="{{isSaving || !name}}"
+        >
+          {{mode === 'edit' ? (isSaving ? '保存中...' : '保存修改') : (isSaving ? '保存中...' : '保存物品')}}
+        </button>
+      </view>
+    </view>
+  </view>
+</view>

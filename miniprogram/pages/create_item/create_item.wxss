@@ -1,0 +1,246 @@
+/* pages/create_item/create_item.wxss - 清新简约风 */
+
+.container {
+  min-height: 100vh;
+  background: #f8fafc;
+  padding: 32rpx;
+}
+
+/* ===== 页面头部 ===== */
+.page-header {
+  margin-bottom: 40rpx;
+}
+
+.page-title {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #1e293b;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.page-subtitle {
+  font-size: 28rpx;
+  color: #64748b;
+  display: block;
+}
+
+/* ===== 表单卡片 ===== */
+.form-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+}
+
+/* ===== 表单项 ===== */
+.form-item {
+  margin-bottom: 40rpx;
+}
+
+.form-item:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 16rpx;
+}
+
+.label-required::after {
+  content: '*';
+  color: #ef4444;
+  margin-left: 8rpx;
+}
+
+.hint {
+  font-size: 24rpx;
+  color: #94a3b8;
+  margin-top: 12rpx;
+  display: block;
+}
+
+/* ===== 输入框 ===== */
+.input {
+  height: 96rpx;
+  background: #f8fafc;
+  border-radius: 16rpx;
+  padding: 0 28rpx;
+  font-size: 32rpx;
+  color: #1e293b;
+  border: 2rpx solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  border-color: #6366f1;
+  background: #ffffff;
+}
+
+.placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* ===== 选择器 ===== */
+.picker {
+  height: 96rpx;
+  background: #f8fafc;
+  border-radius: 16rpx;
+  padding: 0 28rpx;
+  display: flex;
+  align-items: center;
+  font-size: 32rpx;
+  color: #94a3b8;
+  border: 2rpx solid #e2e8f0;
+  position: relative;
+}
+
+.picker.has-value {
+  color: #1e293b;
+}
+
+.picker::after {
+  content: '›';
+  position: absolute;
+  right: 28rpx;
+  font-size: 32rpx;
+  color: #cbd5e1;
+  transform: rotate(90deg);
+}
+
+/* ===== 数量选择器 ===== */
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.quantity-btn {
+  width: 80rpx;
+  height: 80rpx;
+  background: #f1f5f9;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  color: #6366f1;
+  font-weight: 300;
+}
+
+.quantity-btn::after {
+  border: none;
+}
+
+.quantity-btn:active {
+  background: #e2e8f0;
+}
+
+.quantity-input {
+  flex: 1;
+  height: 96rpx;
+  background: #f8fafc;
+  border-radius: 16rpx;
+  text-align: center;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #1e293b;
+  border: 2rpx solid #e2e8f0;
+}
+
+/* ===== 按钮区域 ===== */
+.button-area {
+  margin-top: 60rpx;
+}
+
+.button-area button {
+  width: 100%;
+  height: 96rpx;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 600;
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12rpx 40rpx rgba(99, 102, 241, 0.3);
+}
+
+.button-area button::after {
+  border: none;
+}
+
+.button-area button[disabled] {
+  background: #e2e8f0;
+  color: #94a3b8;
+  box-shadow: none;
+}
+
+/* ===== 加载状态 ===== */
+.loading-in-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 40rpx;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid #e2e8f0;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20rpx;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-in-card text {
+  font-size: 28rpx;
+  color: #94a3b8;
+}
+
+/* ===== 备注输入框 ===== */
+.textarea {
+  width: 100%;
+  min-height: 200rpx;
+  background: #f8fafc;
+  border-radius: 16rpx;
+  padding: 24rpx 28rpx;
+  font-size: 30rpx;
+  color: #1e293b;
+  border: 2rpx solid #e2e8f0;
+  box-sizing: border-box;
+}
+
+/* ===== 图片上传区域 ===== */
+.image-upload {
+  width: 200rpx;
+  height: 200rpx;
+  background: #f8fafc;
+  border-radius: 16rpx;
+  border: 2rpx dashed #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-icon {
+  font-size: 48rpx;
+  margin-bottom: 12rpx;
+}
+
+.upload-text {
+  font-size: 24rpx;
+  color: #94a3b8;
+}

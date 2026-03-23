@@ -1,0 +1,87 @@
+<!-- pages/item_detail/item_detail.wxml - 清新简约风 -->
+<view class="container">
+  <!-- 加载状态 -->
+  <view wx:if="{{isLoading}}" class="loading">
+    <view class="loading-spinner"></view>
+    <text>正在加载...</text>
+  </view>
+
+  <!-- 内容区域 -->
+  <view wx:else class="content">
+    <!-- 头部 -->
+    <view class="header">
+      <view class="back-btn" bindtap="goBack">‹</view>
+      <view class="item-icon">📦</view>
+      <text class="item-title">{{item.name}}</text>
+      <text class="item-subtitle">数量：{{item.quantity}}</text>
+    </view>
+
+    <!-- 内容卡片 -->
+    <view class="content">
+      <!-- 基本信息 -->
+      <view class="info-card">
+        <text class="info-title">基本信息</text>
+        <view class="info-item">
+          <text class="info-label">物品名称</text>
+          <text class="info-value">{{item.name}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">当前数量</text>
+          <text class="info-value highlight">× {{item.quantity}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">保质期</text>
+          <text class="info-value {{item.daysLeft <= 0 ? 'danger' : item.daysLeft <= 3 ? 'warning' : ''}}">
+            {{item.expiryDate || '未设置'}}
+          </text>
+        </view>
+        <view class="info-item" wx:if="{{item.remark}}">
+          <text class="info-label">备注</text>
+          <text class="info-value">{{item.remark}}</text>
+        </view>
+      </view>
+
+      <!-- 所属空间 -->
+      <view class="info-card">
+        <text class="info-title">位置信息</text>
+        <view class="info-item">
+          <text class="info-label">所属空间</text>
+          <text class="info-value">{{locationName}}</text>
+        </view>
+      </view>
+
+      <!-- 时间线 -->
+      <view class="info-card">
+        <text class="info-title">操作记录</text>
+        <view class="timeline">
+          <view class="timeline-item">
+            <view class="timeline-dot"></view>
+            <view class="timeline-content">
+              <text class="timeline-title">物品创建</text>
+              <text class="timeline-time">{{item.createTimeDisplay}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部按钮 -->
+    <view class="footer">
+      <button class="footer-btn btn-edit" bindtap="onEdit">编辑</button>
+      <button class="footer-btn btn-primary" bindtap="onConsume">消耗</button>
+    </view>
+  </view>
+
+  <!-- 删除确认弹窗 -->
+  <view wx:if="{{showDeleteModal}}" class="delete-modal-mask" catchtap="closeDeleteModal">
+    <view class="delete-modal-card">
+      <view class="delete-icon">🗑️</view>
+      <text class="delete-title">确认删除？</text>
+      <text class="delete-desc">删除后无法恢复，请谨慎操作</text>
+      <view class="delete-modal-btns">
+        <button class="delete-btn cancel" bindtap="closeDeleteModal">取消</button>
+        <button class="delete-btn confirm" bindtap="confirmDelete">确认删除</button>
+      </view>
+    </view>
+  </view>
+</view>

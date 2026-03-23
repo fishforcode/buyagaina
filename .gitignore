@@ -1,0 +1,21 @@
+# 敏感配置文件
+project.private.config.json
+miniprogram/config.js
+
+# 云函数依赖（会自动安装）
+cloudfunctions/**/node_modules/
+cloudfunctions/**/package-lock.json
+
+# 小程序构建输出
+miniprogram_npm/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# IDE配置
+.idea/
+.vscode/
+
+# 日志文件
+*.log

@@ -1,0 +1,118 @@
+<!-- pages/location/location.wxml - 清新简约风 -->
+<view class="container">
+  <!-- 加载状态 -->
+  <view wx:if="{{isLoading}}" class="loading">
+    <view class="loading-spinner"></view>
+    <text>正在加载...</text>
+  </view>
+
+  <!-- 内容区域 -->
+  <view wx:else class="content">
+    <!-- 顶部：空间名称和基本信息 -->
+    <view class="header" wx:if="{{locationInfo}}">
+      <view class="header-top">
+        <text class="title">{{locationInfo.name}}</text>
+        <view wx:if="{{isCreator}}" class="header-actions">
+          <view class="header-btn" bindtap="onRenameTap">重命名</view>
+          <view class="header-btn" bindtap="onDeleteSpaceTap">删除</view>
+        </view>
+      </view>
+      <text class="subtitle">{{itemList.length}} 件物品</text>
+
+      <!-- 统计卡片 -->
+      <view class="stats-card">
+        <view class="stat-item">
+          <text class="stat-value">{{itemList.length}}</text>
+          <text class="stat-label">总物品</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{expiredCount || 0}}</text>
+          <text class="stat-label">已过期</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{expiringCount || 0}}</text>
+          <text class="stat-label">临期</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 主体：物品列表区域 -->
+    <view class="main">
+
+      <view class="section-title">物品清单</view>
+
+      <!-- 物品列表加载状态 -->
+      <view wx:if="{{isItemLoading}}" class="loading">
+        <view class="loading-spinner"></view>
+        <text>正在加载物品...</text>
+      </view>
+
+      <!-- 有物品：渲染列表 -->
+      <view wx:elif="{{itemList.length > 0}}" class="item-list">
+        <view wx:for="{{itemList}}" wx:key="_id" class="item" data-id="{{item._id}}">
+          <view class="item-info" bindtap="onItemTap" data-id="{{item._id}}">
+            <view class="item-header">
+              <text class="item-name">{{item.name}}</text>
+              <text class="item-quantity">× {{item.quantity}}</text>
+            </view>
+            <view class="item-footer">
+              <text wx:if="{{item.expiryDate}}" class="item-expiry {{item.status}}">{{item.expiryDate}}</text>
+              <text wx:else class="item-expiry">未设置保质期</text>
+            </view>
+          </view>
+
+          <view class="item-actions">
+            <button class="btn-action btn-edit" size="mini" bindtap="onEditItem" data-id="{{item._id}}">编辑</button>
+            <button class="btn-action btn-consume" size="mini" bindtap="onConsumeItem" data-index="{{index}}" data-id="{{item._id}}">消耗</button>
+            <button class="btn-action btn-delete" size="mini" bindtap="onDeleteItem" data-index="{{index}}" data-id="{{item._id}}">删除</button>
+          </view>
+        </view>
+      </view>
+
+      <!-- 无物品：显示空状态 -->
+      <view wx:else class="empty-state">
+        <view class="empty-icon">📦</view>
+        <text class="empty-text">这里还没有物品</text>
+        <text class="empty-desc">点击下方按钮，添加第一个物品</text>
+      </view>
+    </view>
+
+    <!-- 底部操作按钮：添加物品 -->
+    <view class="footer">
+      <button class="add-button" bindtap="goToAddItem">+ 添加物品</button>
+    </view>
+  </view>
+
+  <!-- 重命名空间弹窗 -->
+  <view wx:if="{{showRenameModal}}" class="consume-modal-mask" catchtap="closeRenameModal">
+    <view class="consume-modal-card rename-modal" catchtap="onRenameCardTap">
+      <view class="consume-modal-title">重命名空间</view>
+      <input class="consume-input" type="text" placeholder="请输入空间名称" value="{{renameInput}}" bindinput="onRenameInput" />
+      <view class="consume-modal-btns">
+        <button class="consume-btn cancel" bindtap="closeRenameModal">取消</button>
+        <button class="consume-btn confirm" bindtap="confirmRename">确定</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 消耗数量弹窗 -->
+  <view wx:if="{{showConsumeModal}}" class="consume-modal-mask" catchtap="closeConsumeModal">
+    <view class="consume-modal-card" catchtap="onConsumeCardTap">
+      <view class="consume-modal-title">消耗「{{consumeItemName}}」</view>
+      <view class="consume-modal-qty">当前数量：{{consumeItemQuantity}}</view>
+      <view class="consume-modal-label">本次消耗数量</view>
+      <view class="consume-quick-row">
+        <button class="consume-quick-btn" data-num="1" bindtap="setConsumeQuick">1</button>
+        <button class="consume-quick-btn" data-num="2" bindtap="setConsumeQuick">2</button>
+        <button class="consume-quick-btn" data-num="3" bindtap="setConsumeQuick">3</button>
+        <button class="consume-quick-btn" data-num="5" bindtap="setConsumeQuick">5</button>
+        <button class="consume-quick-btn" data-num="10" bindtap="setConsumeQuick">10</button>
+      </view>
+      <input class="consume-input" type="number" placeholder="或输入数量" value="{{consumeInput}}" bindinput="onConsumeInput" />
+      <view class="consume-modal-btns">
+        <button class="consume-btn cancel" bindtap="closeConsumeModal">取消</button>
+        <button class="consume-btn confirm" bindtap="confirmConsume">确认消耗</button>
+      </view>
+    </view>
+  </view>
+</view>

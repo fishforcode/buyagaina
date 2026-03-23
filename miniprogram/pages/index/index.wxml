@@ -1,0 +1,90 @@
+<!-- pages/index/index.wxml - 清新简约风 -->
+<view class="container">
+  <!-- 状态1：加载中 -->
+  <view wx:if="{{isLoading}}" class="loading">
+    <view class="loading-spinner"></view>
+    <text>正在加载...</text>
+  </view>
+
+  <!-- 状态2：新用户引导页 -->
+  <view wx:elif="{{isFirstUser}}" class="welcome-page">
+    <view class="guide-card">
+      <view class="guide-image"></view>
+      <text class="guide-title">欢迎使用「又买啊」</text>
+      <text class="guide-desc">记录家中物品，不再错过保质期，轻松管理你的家庭库存</text>
+      <button type="primary" bindtap="goToCreateFirstLocation" class="guide-button">
+        创建第一个空间
+      </button>
+    </view>
+  </view>
+
+  <!-- 状态3：老用户的空间列表页 -->
+  <view wx:else class="home-page">
+    <!-- 头部 -->
+    <view class="header">
+      <text class="welcome">欢迎回来！</text>
+      <text class="subtitle">管理你的家庭物品</text>
+    </view>
+
+    <!-- 快捷功能栏 -->
+    <view class="quick-actions">
+      <view class="action-item {{reminderEnabled ? 'active' : ''}}" bindtap="openReminderSettings">
+        <view class="action-icon">{{reminderEnabled ? '✓' : '🔔'}}</view>
+        <view class="action-text">
+          <text class="action-title">临期提醒</text>
+          <text class="action-status">{{reminderEnabled ? '已开启，每天自动检查' : '未开启，点击开启'}}</text>
+        </view>
+        <view class="action-arrow">›</view>
+      </view>
+    </view>
+
+    <!-- 空间列表 -->
+    <view class="location-section">
+      <view class="section-header">
+        <text class="section-title">我的空间</text>
+        <text class="section-count">{{locationList.length}} 个</text>
+      </view>
+      
+      <view class="location-list">
+        <view wx:for="{{locationList}}" wx:key="_id" class="location-item" 
+              data-id="{{item._id}}" bindtap="goToLocation">
+          <view class="location-icon">{{item.icon || '📦'}}</view>
+          <view class="location-info-wrap">
+            <text class="location-name">{{item.name}}</text>
+            <text class="location-info">{{item.itemCount || 0}} 件物品</text>
+          </view>
+          <view class="location-arrow">›</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 添加按钮 -->
+    <view class="add-button">
+      <button bindtap="goToCreateFirstLocation">+ 添加新空间</button>
+    </view>
+
+    <!-- 临期提醒手动检查按钮 -->
+    <view class="check-expiry-section">
+      <button class="check-expiry-btn" bindtap="testCheckExpiry">立即检查临期物品</button>
+    </view>
+  </view>
+
+  <!-- 订阅消息授权弹窗 -->
+  <view wx:if="{{showSubscribeModal}}" class="subscribe-modal" bindtap="closeSubscribeModal">
+    <view class="subscribe-card" catchtap="onSubscribeCardTap">
+      <view class="subscribe-icon">🔔</view>
+      <view class="subscribe-title">开启临期提醒</view>
+      <view class="subscribe-desc">
+        我们会在物品即将过期时提醒你，帮你减少浪费
+      </view>
+      <view class="subscribe-tips">
+        <text>每天 12:00、22:00 自动检查</text>
+        <text>临期/过期物品主动推送</text>
+      </view>
+      <button type="primary" bindtap="requestSubscribeMessage" class="subscribe-button">
+        立即开启
+      </button>
+      <view class="subscribe-skip" bindtap="closeSubscribeModal">暂不开启</view>
+    </view>
+  </view>
+</view>

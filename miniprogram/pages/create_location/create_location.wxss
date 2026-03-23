@@ -1,0 +1,154 @@
+/* pages/create_location/create_location.wxss - 清新简约风 */
+
+.container {
+  min-height: 100vh;
+  background: #f8fafc;
+  padding: 32rpx;
+}
+
+/* ===== 页面头部 ===== */
+.page-header {
+  margin-bottom: 40rpx;
+}
+
+.page-title {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #1e293b;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.page-subtitle {
+  font-size: 28rpx;
+  color: #64748b;
+  display: block;
+}
+
+/* ===== 表单卡片 ===== */
+.form-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+}
+
+/* ===== 表单项 ===== */
+.form-item {
+  margin-bottom: 40rpx;
+}
+
+.form-item:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 16rpx;
+}
+
+.label-required::after {
+  content: '*';
+  color: #ef4444;
+  margin-left: 8rpx;
+}
+
+.hint {
+  font-size: 24rpx;
+  color: #94a3b8;
+  margin-top: 12rpx;
+  display: block;
+}
+
+/* ===== 输入框 ===== */
+.input {
+  height: 96rpx;
+  background: #f8fafc;
+  border-radius: 16rpx;
+  padding: 0 28rpx;
+  font-size: 32rpx;
+  color: #1e293b;
+  border: 2rpx solid #e2e8f0;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: #6366f1;
+  background: #ffffff;
+}
+
+.placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* ===== 图标选择器 ===== */
+.icon-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+
+.icon-option {
+  width: 100rpx;
+  height: 100rpx;
+  background: #f8fafc;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  border: 2rpx solid transparent;
+  transition: all 0.2s ease;
+}
+
+.icon-option.selected {
+  background: #eef2ff;
+  border-color: #6366f1;
+  transform: scale(1.1);
+}
+
+/* ===== 按钮区域 ===== */
+.button-area {
+  margin-top: 60rpx;
+}
+
+.button-area button {
+  width: 100%;
+  height: 96rpx;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 600;
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12rpx 40rpx rgba(99, 102, 241, 0.3);
+}
+
+.button-area button::after {
+  border: none;
+}
+
+.button-area button[disabled] {
+  background: #e2e8f0;
+  color: #94a3b8;
+  box-shadow: none;
+}
+
+/* ===== 备注输入框 ===== */
+.textarea {
+  width: 100%;
+  min-height: 200rpx;
+  background: #f8fafc;
+  border-radius: 16rpx;
+  padding: 24rpx 28rpx;
+  font-size: 30rpx;
+  color: #1e293b;
+  border: 2rpx solid #e2e8f0;
+  box-sizing: border-box;
+}

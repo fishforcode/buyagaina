@@ -1,0 +1,63 @@
+<!-- pages/create_location/create_location.wxml - 清新简约风 -->
+<view class="container">
+  <!-- 页面头部 -->
+  <view class="page-header">
+    <text class="page-title">创建空间</text>
+    <text class="page-subtitle">添加一个新的储物空间</text>
+  </view>
+
+  <view class="form-card">
+    <!-- 空间名称 -->
+    <view class="form-item">
+      <text class="label label-required">空间名称</text>
+      <input 
+        class="input" 
+        type="text" 
+        placeholder="例如：冰箱、客厅橱柜、储物间" 
+        placeholder-class="placeholder"
+        bindinput="onNameInput"
+        value="{{name}}"
+      />
+    </view>
+
+    <!-- 选择图标 -->
+    <view class="form-item">
+      <text class="label">选择图标</text>
+      <view class="icon-selector">
+        <view 
+          wx:for="{{icons}}" 
+          wx:key="*this" 
+          class="icon-option {{selectedIcon === item ? 'selected' : ''}}"
+          bindtap="selectIcon"
+          data-icon="{{item}}"
+        >
+          {{item}}
+        </view>
+      </view>
+    </view>
+
+    <!-- 备注 (可选) -->
+    <view class="form-item">
+      <text class="label">备注</text>
+      <textarea 
+        class="textarea"
+        placeholder="添加备注信息（可选）"
+        placeholder-class="placeholder"
+        bindinput="onRemarkInput"
+        value="{{remark}}"
+        maxlength="200"
+      />
+    </view>
+
+    <!-- 保存按钮 -->
+    <view class="button-area">
+      <button 
+        type="primary" 
+        bindtap="onSubmit"
+        disabled="{{!locationName}}"
+      >
+        创建空间
+      </button>
+    </view>
+  </view>
+</view>
