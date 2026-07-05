@@ -19,7 +19,9 @@ Page({
     consumeItemId: '',
     consumeItemName: '',
     consumeItemQuantity: 0,
-    consumeInput: '1'
+    consumeInput: '1',
+    // 分享相关
+    shareToken: ''
   },
 
   /**
@@ -60,14 +62,21 @@ Page({
     var itemsPromise = db.collection('items')
       .where({ locationId: locationId })
       .orderBy('createTime', 'desc')
+      .limit(100)
       .get();
+    // 统计总数（不受limit限制）
+    var countPromise = db.collection('items')
+      .where({ locationId: locationId })
+      .count();
 
     // 并行加载，使用最基础的 Promise 语法确保兼容性
-    Promise.all([locationPromise, itemsPromise])
+    Promise.all([locationPromise, itemsPromise, countPromise])
       .then(function (results) {
         var locationRes = results[0];
         var itemsRes = results[1];
-        console.log('数据加载完成，物品数:', itemsRes.data.length);
+        var countRes = results[2];
+        var totalCount = countRes.total || itemsRes.data.length;
+        console.log('数据加载完成，物品数:', itemsRes.data.length, '总数:', totalCount);
 
         // 为每个物品添加状态标记 + 添加日期的显示字符串（优先 createTimeStr，兼容旧数据）
         var today = new Date();
@@ -106,6 +115,7 @@ Page({
         that.setData({
           locationInfo: locationRes.data,
           itemList: itemListWithState,
+          totalCount: totalCount,
           expiredCount: expiredCount,
           expiringCount: expiringCount,
           isLoading: false,
@@ -431,13 +441,71 @@ onEditItem: function (e) {
     });
   },
 
+  /** 分享空间：仅创建者可见 */
+  onShareTap: function () {
+    var that = this;
+    var locationId = this.data.locationId;
+    
+    wx.showLoading({ title: '生成分享链接...' });
+    
+    wx.cloud.callFunction({
+      name: 'generateShareToken',
+      data: { locationId: locationId },
+      success: function (result) {
+        wx.hideLoading();
+        if (result.result.code === 0) {
+          var shareToken = result.result.data.shareToken;
+          that.setData({ shareToken: shareToken });
+          
+          wx.showModal({
+            title: '分享空间',
+            content: '点击「分享」按钮，将空间分享给家人或朋友',
+            showCancel: false,
+            confirmText: '知道了',
+            success: function () {
+              that.onShareAppMessage();
+            }
+          });
+        } else {
+          wx.showToast({
+            title: result.result.message,
+            icon: 'none'
+          });
+        }
+      },
+      fail: function (err) {
+        wx.hideLoading();
+        console.error('生成分享链接失败:', err);
+        wx.showToast({
+          title: '生成分享链接失败',
+          icon: 'none'
+        });
+      }
+    });
+  },
+
+  /** 分享给朋友 */
+  onShareAppMessage: function () {
+    var shareToken = this.data.shareToken;
+    var locationName = this.data.locationInfo && this.data.locationInfo.name ? this.data.locationInfo.name : '空间';
+    
+    return {
+      title: '邀请你一起管理「' + locationName + '」',
+      path: '/pages/index/index?shareToken=' + shareToken,
+      imageUrl: '/images/share.png'
+    };
+  },
+
   /** 删除空间：仅创建者可见，二次确认后删除 */
   onDeleteSpaceTap: function () {
     var that = this;
     var name = this.data.locationInfo && this.data.locationInfo.name ? this.data.locationInfo.name : '该空间';
+    var itemCount = this.data.totalCount || this.data.itemList.length || 0;
+    var itemWarning = itemCount > 0 ? '（包含 ' + itemCount + ' 件物品）' : '';
+    
     wx.showModal({
       title: '确认删除空间',
-      content: '确定要删除【' + name + '】吗？空间内的物品不会被删除，但将不再归属此空间。此操作不可恢复。',
+      content: '确定要删除【' + name + '】' + itemWarning + ' 吗？此操作不可恢复，空间及所有物品将被彻底删除。',
       confirmColor: '#f56c6c',
       success: function (res) {
         if (res.confirm) that._doDeleteSpace();
@@ -447,15 +515,33 @@ onEditItem: function (e) {
   _doDeleteSpace: function () {
     var that = this;
     var locationId = this.data.locationId;
-    wx.cloud.database().collection('locations').doc(locationId).remove({
+    var db = wx.cloud.database();
+    
+    wx.showLoading({ title: '删除中...' });
+    
+    // 1. 先删除该空间的所有物品
+    db.collection('items').where({ locationId: locationId }).remove({
       success: function () {
-        wx.showToast({ title: '已删除空间', icon: 'success' });
-        setTimeout(function () {
-          wx.navigateBack();
-        }, 800);
+        console.log('空间内物品已删除');
+        // 2. 再删除空间
+        db.collection('locations').doc(locationId).remove({
+          success: function () {
+            wx.hideLoading();
+            wx.showToast({ title: '已删除空间', icon: 'success' });
+            setTimeout(function () {
+              wx.navigateBack();
+            }, 800);
+          },
+          fail: function (err) {
+            wx.hideLoading();
+            console.error('删除空间失败', err);
+            wx.showToast({ title: '删除失败，请重试', icon: 'none' });
+          }
+        });
       },
       fail: function (err) {
-        console.error('删除空间失败', err);
+        wx.hideLoading();
+        console.error('删除物品失败', err);
         wx.showToast({ title: '删除失败，请重试', icon: 'none' });
       }
     });

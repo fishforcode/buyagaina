@@ -17,6 +17,9 @@ const db = cloud.database();
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext();
   const openid = wxContext.OPENID;
+  
+  // 获取传入的参数（如果有）
+  const { reminderEnabled, reminderDays } = event;
 
   try {
     // 检查是否已存在设置
@@ -24,21 +27,44 @@ exports.main = async (event, context) => {
       _openid: openid
     }).get();
 
+    const now = new Date();
+
     if (existing.data && existing.data.length > 0) {
+      // 已存在，更新设置
+      const docId = existing.data[0]._id;
+      const updateData = {
+        updateTime: now
+      };
+      
+      // 只更新传入的参数
+      if (reminderEnabled !== undefined) {
+        updateData.reminderEnabled = reminderEnabled;
+      }
+      if (reminderDays !== undefined) {
+        updateData.reminderDays = reminderDays;
+      }
+      
+      await db.collection('user_settings').doc(docId).update({
+        data: updateData
+      });
+
       return {
         code: 0,
-        message: '设置已存在',
-        data: existing.data[0]
+        message: '设置已更新',
+        data: {
+          _id: docId,
+          reminderEnabled: reminderEnabled !== undefined ? reminderEnabled : existing.data[0].reminderEnabled,
+          reminderDays: reminderDays !== undefined ? reminderDays : existing.data[0].reminderDays
+        }
       };
     }
 
     // 创建默认设置
-    const now = new Date();
     const res = await db.collection('user_settings').add({
       data: {
         _openid: openid,
-        reminderDays: 3,           // 默认提前3天提醒
-        reminderEnabled: true,     // 默认开启提醒
+        reminderDays: reminderDays || 3,           // 默认提前3天提醒
+        reminderEnabled: reminderEnabled !== undefined ? reminderEnabled : true,     // 默认开启提醒
         createTime: now,
         updateTime: now
       }
@@ -49,8 +75,8 @@ exports.main = async (event, context) => {
       message: '初始化成功',
       data: {
         _id: res._id,
-        reminderDays: 3,
-        reminderEnabled: true
+        reminderDays: reminderDays || 3,
+        reminderEnabled: reminderEnabled !== undefined ? reminderEnabled : true
       }
     };
 

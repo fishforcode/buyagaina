@@ -1,4 +1,5 @@
 const cloud = require("wx-server-sdk");
+const config = require("./config.js");
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV,
 });
@@ -24,18 +25,6 @@ function getTodayDateString() {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-/**
- * 获取 N 天后的日期字符串
- */
-function getDateAfterDays(days) {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
@@ -87,25 +76,44 @@ async function getUserSettings(openid) {
  * 查询用户的临期物品
  * @param {string} openid - 用户的 openid
  * @param {number} reminderDays - 提醒天数
+ * @param {string} locationId - 可选：指定空间ID，只查询该空间的物品
  */
-async function getExpiringItems(openid, reminderDays) {
+async function getExpiringItems(openid, reminderDays, locationId = null) {
   const today = getTodayDateString();
-  const targetDate = getDateAfterDays(reminderDays);
-
-  console.log('查询参数:', { openid, today, targetDate, reminderDays });
 
   try {
-    // 查询该用户创建的所有物品
+    // 构建查询条件 - 必须有关联的空间（排除孤儿物品）
+    const whereCondition = {
+      _openid: openid,
+      locationId: locationId ? locationId : _.neq(null)  // 指定空间 或 有任意空间
+    };
+    
+    // 查询该用户的物品（可指定特定空间）
     const res = await db.collection('items')
-      .where({
-        _openid: openid
-      })
+      .where(whereCondition)
       .get();
+    
+    // 获取所有物品关联的空间ID
+    const locationIds = [...new Set(res.data.map(item => item.locationId).filter(id => id))];
+    
+    // 批量查询这些空间是否还存在
+    const validLocationIds = new Set();
+    if (locationIds.length > 0) {
+      // 分批查询，每次最多100个
+      const batchSize = 100;
+      for (let i = 0; i < locationIds.length; i += batchSize) {
+        const batch = locationIds.slice(i, i + batchSize);
+        const locationRes = await db.collection('locations')
+          .where({ _id: _.in(batch) })
+          .field({ _id: true })
+          .get();
+        locationRes.data.forEach(loc => validLocationIds.add(loc._id));
+      }
+    }
 
-    console.log('查询到的物品数量:', res.data.length);
-    console.log('物品列表:', res.data.map(item => ({ name: item.name, expiryDate: item.expiryDate, _openid: item._openid })));
-
-    const items = res.data || [];
+    // 过滤掉空间已删除的物品
+    const items = res.data.filter(item => validLocationIds.has(item.locationId)) || [];
+    
     const expiringItems = [];
 
     items.forEach(item => {
@@ -140,91 +148,20 @@ async function getExpiringItems(openid, reminderDays) {
 }
 
 /**
- * 发送订阅消息
- * @param {string} openid - 用户的 openid
- * @param {object} item - 物品信息
- * @param {string} templateId - 模板ID
- */
-async function sendSubscribeMessage(openid, item, templateId) {
-  try {
-    const now = new Date();
-    const expiryDate = item.expiryDate;
-
-    // 确定提醒类型
-    const reminderType = item.reminderLevel === 'expired' ? '紧急提醒' : '临期提醒';
-
-    // 格式化过期时间
-    const formattedDate = typeof expiryDate === 'string'
-      ? expiryDate.substring(0, 10)
-      : new Date(expiryDate).toISOString().substring(0, 10);
-
-    // 计算剩余天数
-    const daysLeft = item.daysLeft <= 0 ? 0 : item.daysLeft;
-
-    // 查询所属空间名称
-    let locationName = '未知空间';
-    if (item.locationId) {
-      try {
-        const locationRes = await db.collection('locations').doc(item.locationId).get();
-        if (locationRes.data) {
-          locationName = locationRes.data.name || '未知空间';
-        }
-      } catch (err) {
-        console.error('查询空间名称失败:', err);
-      }
-    }
-
-    // 获取备注
-    const remark = item.remark || '无';
-
-    // 发送订阅消息
-    // 注意：开发测试时 miniprogramState 用 'trial'，正式上线后改为 'formal'
-    await cloud.openapi.subscribeMessage.send({
-      touser: openid,
-      page: `pages/item_detail/item_detail?id=${item._id}`,
-      data: {
-        thing5: { value: item.name },         // 物品名称
-        date1: { value: formattedDate },     // 有效期至
-        time8: { value: item.createTime ? new Date(item.createTime).toISOString().substring(0, 10) : formattedDate }, // 生产日期（用创建时间代替）
-        thing10: { value: locationName },    // 位置
-        thing3: { value: remark }            // 备注
-      },
-      templateId: templateId,
-      miniprogramState: 'formal'  // 正式版
-    });
-
-    console.log('发送订阅消息成功:', item.name);
-    return { success: true };
-  } catch (err) {
-    console.error('发送订阅消息失败:', err);
-    // 提取详细的错误信息
-    let errorMessage = '未知错误';
-    if (err && typeof err === 'object') {
-      errorMessage = err.message || err.errMsg || err.errMessage || JSON.stringify(err);
-    } else if (typeof err === 'string') {
-      errorMessage = err;
-    }
-    console.error('错误详情:', errorMessage);
-    return { success: false, errorMessage: errorMessage };
-  }
-}
-
-/**
  * 执行临期检查（核心逻辑）
  * @param {string} openid - 用户openid
- * @param {boolean} skipReminderCheck - 是否跳过提醒日期检查（测试用）
+ * @param {boolean} sendNotification - 是否发送订阅消息
+ * @param {string} locationId - 可选：指定空间ID，只检查该空间
+ * @param {boolean} recordReminderDate - 是否记录提醒日期（用于限制重复提醒）
  */
-async function runExpiryCheck(openid, skipReminderCheck = false) {
-  // 订阅消息模板ID（保质期到期提醒）
-  const TEMPLATE_ID = 'kjNYfJVcrdGMfxi9HmS21AHgQdV_GCJP3BRE92UQlio';
+async function runExpiryCheck(openid, sendNotification = true, locationId = null, recordReminderDate = false) {
+  // 从配置文件读取模板ID
+  const TEMPLATE_ID = config.templateId;
 
   // 获取用户设置
   const settings = await getUserSettings(openid);
 
-  console.log('用户设置:', settings);
-
   if (!settings.reminderEnabled) {
-    console.log('用户已关闭提醒，跳过');
     return {
       code: 0,
       message: '用户已关闭提醒'
@@ -232,54 +169,42 @@ async function runExpiryCheck(openid, skipReminderCheck = false) {
   }
 
   // 查询临期物品
-  const expiringItems = await getExpiringItems(openid, settings.reminderDays);
-
-  console.log(`找到 ${expiringItems.length} 个临期物品`);
+  const expiringItems = await getExpiringItems(openid, settings.reminderDays, locationId);
 
   if (expiringItems.length === 0) {
     return {
       code: 0,
-      message: '没有临期物品需要提醒',
-      debug: {
-        openid: openid,
-        today: today,
-        targetDate: targetDate,
-        allItems: res.data.map(item => ({ 
-          name: item.name, 
-          expiryDate: item.expiryDate, 
-          _openid: item._openid 
-        }))
-      }
+      message: '没有临期物品需要提醒'
     };
   }
 
   // 发送订阅消息（聚合消息）
   const today = getTodayDateString();
   
-  // 检查今天是否已经发送过聚合提醒
-  const hasRemindedToday = expiringItems.some(item => item.lastRemindedDate === today);
-  if (!skipReminderCheck && hasRemindedToday) {
-    console.log('今天已经发送过聚合提醒，跳过');
-    return {
-      code: 0,
-      message: '今天已提醒过',
-      data: {
-        total: expiringItems.length,
-        success: 0,
-        fail: 0,
-        skipped: expiringItems.length,
-        items: expiringItems.map(item => ({
-          name: item.name,
-          daysLeft: item.daysLeft,
-          reminderLevel: item.reminderLevel
-        }))
-      }
-    };
+  // 只有自动触发且需要记录日期时，才检查今天是否已经提醒过
+  if (recordReminderDate) {
+    const hasRemindedToday = expiringItems.some(item => item.lastRemindedDate === today);
+    if (hasRemindedToday) {
+      return {
+        code: 0,
+        message: '今天已提醒过',
+        data: {
+          total: expiringItems.length,
+          success: 0,
+          fail: 0,
+          skipped: expiringItems.length,
+          items: expiringItems.map(item => ({
+            name: item.name,
+            daysLeft: item.daysLeft,
+            reminderLevel: item.reminderLevel
+          }))
+        }
+      };
+    }
   }
 
   // 构建聚合消息内容
   const expiredCount = expiringItems.filter(item => item.reminderLevel === 'expired').length;
-  const expiringCount = expiringItems.filter(item => item.reminderLevel === 'expiring').length;
   
   // 物品名称列表（最多显示3个，超出显示"等"）
   const itemNames = expiringItems.map(item => item.name);
@@ -299,44 +224,61 @@ async function runExpiryCheck(openid, skipReminderCheck = false) {
     thing10: { value: expiredCount > 0 ? `🔴 ${expiredCount}件已过期` : `🟡 即将过期` }  // 位置字段显示状态
   };
 
-  console.log('发送聚合消息:', aggregateData);
-
   // 发送聚合消息
   let success = false;
   let errorMessage = '';
   
-  try {
-    await cloud.openapi.subscribeMessage.send({
-      touser: openid,
-      page: 'pages/index/index',  // 跳转到首页
-      data: aggregateData,
-      templateId: TEMPLATE_ID,
-      miniprogramState: 'developer'
-    });
-    
-    success = true;
-    console.log('✅ 聚合消息发送成功');
-    
-    // 更新所有物品的最后提醒日期
-    for (const item of expiringItems) {
-      try {
-        await db.collection('items').doc(item._id).update({
-          data: {
-            lastRemindedDate: today
+  // 如果需要发送订阅消息
+  if (sendNotification) {
+    try {
+      await cloud.openapi.subscribeMessage.send({
+        touser: openid,
+        page: 'pages/index/index',  // 跳转到首页
+        data: aggregateData,
+        templateId: TEMPLATE_ID,
+        miniprogramState: 'trial'  // 体验版（测试用）
+      });
+      
+      success = true;
+      
+      // 只有需要记录日期时才更新
+      if (recordReminderDate) {
+        for (const item of expiringItems) {
+          try {
+            await db.collection('items').doc(item._id).update({
+              data: {
+                lastRemindedDate: today
+              }
+            });
+          } catch (err) {
+            console.error(`更新 ${item.name} 提醒日期失败:`, err);
           }
-        });
-      } catch (err) {
-        console.error(`更新 ${item.name} 提醒日期失败:`, err);
+        }
       }
+    } catch (err) {
+      success = false;
+      errorMessage = err.message || err.errMsg || '未知错误';
+      console.error('聚合消息发送失败:', errorMessage);
     }
-  } catch (err) {
-    success = false;
-    errorMessage = err.message || err.errMsg || '未知错误';
-    console.error('❌ 聚合消息发送失败:', errorMessage);
+  } else {
+    // 不发送订阅消息，只返回列表
+    return {
+      code: 0,
+      message: '检查完成',
+      data: {
+        total: expiringItems.length,
+        success: 0,
+        fail: 0,
+        skipped: 0,
+        manualCheck: true,
+        items: expiringItems.map(item => ({
+          name: item.name,
+          daysLeft: item.daysLeft,
+          reminderLevel: item.reminderLevel
+        }))
+      }
+    };
   }
-
-  console.log(`=== 临期检查完成 ===`);
-  console.log(`聚合消息: ${success ? '成功' : '失败'}`);
 
   return {
     code: 0,
@@ -362,15 +304,8 @@ async function runExpiryCheck(openid, skipReminderCheck = false) {
  * 2. 手动调用（测试用）
  */
 exports.main = async (event, context) => {
-  console.log('=== 开始执行临期检查 ===');
-  console.log('触发时间:', new Date().toISOString());
-  console.log('触发方式:', event.type || '自动触发');
-
   const wxContext = cloud.getWXContext();
   const currentOpenid = wxContext.OPENID;
-
-  console.log('获取到的openid:', currentOpenid);
-  console.log('完整wxContext:', JSON.stringify(wxContext));
 
   // 如果没有获取到 openid，返回错误
   if (!currentOpenid) {
@@ -382,13 +317,23 @@ exports.main = async (event, context) => {
     };
   }
 
-  console.log('当前用户:', currentOpenid);
-
   try {
-    // 判断是否跳过提醒检查（测试模式）
-    const skipReminderCheck = event.skipReminderCheck === true;
+    // 是否发送订阅消息（默认发送）
+    const sendNotification = event.sendNotification !== false;
+    // 获取指定空间ID（可选）
+    const locationId = event.locationId || null;
+    // 是否跳过每日限制（手动点击时跳过，允许重复发送）
+    const skipDailyLimit = event.skipDailyLimit === true;
+    // 触发类型：'timer' = 定时触发，'manual' = 手动点击
+    const triggerType = event.type || 'manual';
     
-    return await runExpiryCheck(currentOpenid, skipReminderCheck);
+    // 关键逻辑：
+    // - 手动点击（skipDailyLimit=true 或 type=manual）：不记录日期，不限制重复
+    // - 定时触发（type=timer）：记录日期，限制重复
+    const isManualClick = skipDailyLimit || triggerType === 'manual';
+    const recordReminderDate = !isManualClick;
+    
+    return await runExpiryCheck(currentOpenid, sendNotification, locationId, recordReminderDate);
 
   } catch (err) {
     console.error('临期检查执行失败:', err);

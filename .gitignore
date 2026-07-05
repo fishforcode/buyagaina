@@ -2,9 +2,18 @@
 project.private.config.json
 miniprogram/config.js
 
+# 项目配置（含AppID等敏感信息）
+project.config.json
+
+# 云开发配置目录
+.cloudbase/
+
 # 云函数依赖（会自动安装）
 cloudfunctions/**/node_modules/
 cloudfunctions/**/package-lock.json
+
+# 云函数配置文件（含模板ID等敏感信息）
+cloudfunctions/checkExpiry/config.js
 
 # 小程序构建输出
 miniprogram_npm/
@@ -19,3 +28,12 @@ Thumbs.db
 
 # 日志文件
 *.log
+
+# 测试脚本
+test_query.js
+
+# 上传脚本（可能含环境信息）
+uploadCloudFunction.sh
+
+# 本地环境列表
+miniprogram/envList.js

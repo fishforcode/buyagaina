@@ -4,6 +4,7 @@ Page({
     itemId: '',
     locationId: '',
     item: null,
+    locationName: '',
     isLoading: true
   },
 
@@ -17,6 +18,7 @@ Page({
     }
     this.setData({ itemId: itemId, locationId: locationId });
     this.loadItem(itemId);
+    this.loadLocationName(locationId);
   },
 
   loadItem: function (itemId) {
@@ -38,6 +40,18 @@ Page({
         that.setData({ isLoading: false });
         setTimeout(function () { wx.navigateBack(); }, 1500);
       }
+    });
+  },
+
+  loadLocationName: function (locationId) {
+    if (!locationId) return;
+    var that = this;
+    var db = wx.cloud.database();
+    db.collection('locations').doc(locationId).get({
+      success: function (res) {
+        that.setData({ locationName: res.data.name || '' });
+      },
+      fail: function () {}
     });
   },
 
@@ -64,7 +78,11 @@ Page({
     return raw.indexOf('T') !== -1 ? raw.replace('T', ' ') : raw;
   },
 
-  onEditTap: function () {
+  goBack: function () {
+    wx.navigateBack();
+  },
+
+  onEdit: function () {
     var itemId = this.data.itemId;
     var locationId = this.data.locationId;
     if (!itemId || !locationId) {
@@ -74,5 +92,29 @@ Page({
     wx.navigateTo({
       url: '/pages/create_item/create_item?mode=edit&itemId=' + itemId + '&locationId=' + locationId
     });
+  },
+
+  onConsume: function () {
+    var item = this.data.item;
+    var locationId = this.data.locationId;
+    if (!item || !locationId) {
+      wx.showToast({ title: '信息不完整', icon: 'none' });
+      return;
+    }
+    var pages = getCurrentPages();
+    var prevPage = pages[pages.length - 2];
+    if (prevPage && prevPage.onConsumeItem) {
+      prevPage.onConsumeItem({
+        currentTarget: {
+          dataset: {
+            index: -1,
+            id: item._id
+          }
+        }
+      });
+      wx.navigateBack();
+    } else {
+      wx.showToast({ title: '请在列表页操作', icon: 'none' });
+    }
   }
 });

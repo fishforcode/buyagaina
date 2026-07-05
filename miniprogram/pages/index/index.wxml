@@ -38,7 +38,7 @@
       </view>
     </view>
 
-    <!-- 空间列表 -->
+    <!-- 我的空间 -->
     <view class="location-section">
       <view class="section-header">
         <text class="section-title">我的空间</text>
@@ -58,6 +58,26 @@
       </view>
     </view>
 
+    <!-- 共享空间 -->
+    <view wx:if="{{sharedLocations.length > 0}}" class="location-section">
+      <view class="section-header">
+        <text class="section-title">共享空间</text>
+        <text class="section-count">{{sharedLocations.length}} 个</text>
+      </view>
+      
+      <view class="location-list">
+        <view wx:for="{{sharedLocations}}" wx:key="_id" class="location-item shared-item" 
+              data-id="{{item._id}}" bindtap="goToLocation">
+          <view class="location-icon">{{item.icon || '📦'}}</view>
+          <view class="location-info-wrap">
+            <text class="location-name">{{item.name}}</text>
+            <text class="location-info">{{item.itemCount || 0}} 件物品 · 共享</text>
+          </view>
+          <view class="location-arrow">›</view>
+        </view>
+      </view>
+    </view>
+
     <!-- 添加按钮 -->
     <view class="add-button">
       <button bindtap="goToCreateFirstLocation">+ 添加新空间</button>
@@ -65,7 +85,7 @@
 
     <!-- 临期提醒手动检查按钮 -->
     <view class="check-expiry-section">
-      <button class="check-expiry-btn" bindtap="testCheckExpiry">立即检查临期物品</button>
+      <button class="check-expiry-btn" bindtap="testCheckExpiry">检查所有临期物品</button>
     </view>
   </view>
 

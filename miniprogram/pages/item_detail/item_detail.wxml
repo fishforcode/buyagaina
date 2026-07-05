@@ -1,87 +1,108 @@
-<!-- pages/item_detail/item_detail.wxml - 清新简约风 -->
-<view class="container">
-  <!-- 加载状态 -->
-  <view wx:if="{{isLoading}}" class="loading">
-    <view class="loading-spinner"></view>
-    <text>正在加载...</text>
+<!-- pages/item_detail/item_detail.wxml - 现代简约风 -->
+<view class="page">
+  <view class="nav-bar">
+    <view class="nav-back" bindtap="goBack">
+      <text class="nav-icon">‹</text>
+    </view>
+    <text class="nav-title">物品详情</text>
+    <view class="nav-placeholder"></view>
   </view>
 
-  <!-- 内容区域 -->
-  <view wx:else class="content">
-    <!-- 头部 -->
-    <view class="header">
-      <view class="back-btn" bindtap="goBack">‹</view>
-      <view class="item-icon">📦</view>
-      <text class="item-title">{{item.name}}</text>
-      <text class="item-subtitle">数量：{{item.quantity}}</text>
+  <view class="scroll-area">
+    <view class="hero-section">
+      <view class="hero-icon-wrap">
+        <text class="hero-icon">📦</text>
+      </view>
+      <text class="hero-name">{{item.name}}</text>
+      <view class="hero-meta">
+        <text class="hero-qty">× {{item.quantity}}</text>
+        <view class="hero-status {{item.daysLeft <= 0 ? 'status-expired' : item.daysLeft <= 3 ? 'status-warning' : item.daysLeft <= 7 ? 'status-attention' : 'status-normal'}}">
+          {{item.daysLeft <= 0 ? '已过期' : item.daysLeft <= 3 ? '即将过期' : item.daysLeft <= 7 ? '临近过期' : '状态良好'}}
+        </view>
+      </view>
     </view>
 
-    <!-- 内容卡片 -->
-    <view class="content">
-      <!-- 基本信息 -->
-      <view class="info-card">
-        <text class="info-title">基本信息</text>
-        <view class="info-item">
-          <text class="info-label">物品名称</text>
-          <text class="info-value">{{item.name}}</text>
+    <view class="card-list">
+      <view class="card">
+        <view class="card-header">
+          <text class="card-title">基本信息</text>
         </view>
-        <view class="info-item">
-          <text class="info-label">当前数量</text>
-          <text class="info-value highlight">× {{item.quantity}}</text>
-        </view>
-        <view class="info-item">
-          <text class="info-label">保质期</text>
-          <text class="info-value {{item.daysLeft <= 0 ? 'danger' : item.daysLeft <= 3 ? 'warning' : ''}}">
-            {{item.expiryDate || '未设置'}}
-          </text>
-        </view>
-        <view class="info-item" wx:if="{{item.remark}}">
-          <text class="info-label">备注</text>
-          <text class="info-value">{{item.remark}}</text>
+        <view class="card-body">
+          <view class="info-row">
+            <view class="info-label-wrap">
+              <text class="info-label">物品名称</text>
+            </view>
+            <text class="info-value">{{item.name}}</text>
+          </view>
+          <view class="info-row">
+            <view class="info-label-wrap">
+              <text class="info-label">当前数量</text>
+            </view>
+            <text class="info-value">{{item.quantity}}</text>
+          </view>
+          <view class="info-row">
+            <view class="info-label-wrap">
+              <text class="info-label">保质期</text>
+            </view>
+            <view class="info-value-wrap">
+              <text class="info-value expiry {{item.daysLeft <= 0 ? 'text-red' : item.daysLeft <= 3 ? 'text-orange' : ''}}">{{item.expiryDate || '未设置'}}</text>
+              <text wx:if="{{item.daysLeft !== undefined && item.daysLeft > 0}}" class="info-sub">剩余 {{item.daysLeft}} 天</text>
+              <text wx:if="{{item.daysLeft !== undefined && item.daysLeft <= 0}}" class="info-sub">已过期 {{Math.abs(item.daysLeft)}} 天</text>
+            </view>
+          </view>
+          <view wx:if="{{item.remark}}" class="info-row">
+            <view class="info-label-wrap">
+              <text class="info-label">备注</text>
+            </view>
+            <text class="info-value">{{item.remark}}</text>
+          </view>
         </view>
       </view>
 
-      <!-- 所属空间 -->
-      <view class="info-card">
-        <text class="info-title">位置信息</text>
-        <view class="info-item">
-          <text class="info-label">所属空间</text>
-          <text class="info-value">{{locationName}}</text>
+      <view class="card">
+        <view class="card-header">
+          <text class="card-title">位置信息</text>
+        </view>
+        <view class="card-body">
+          <view class="info-row">
+            <view class="info-label-wrap">
+              <text class="info-label">所属空间</text>
+            </view>
+            <view class="info-value-wrap">
+              <text class="info-value">{{locationName || '未设置'}}</text>
+            </view>
+          </view>
         </view>
       </view>
 
-      <!-- 时间线 -->
-      <view class="info-card">
-        <text class="info-title">操作记录</text>
-        <view class="timeline">
-          <view class="timeline-item">
-            <view class="timeline-dot"></view>
-            <view class="timeline-content">
-              <text class="timeline-title">物品创建</text>
-              <text class="timeline-time">{{item.createTimeDisplay}}</text>
+      <view class="card">
+        <view class="card-header">
+          <text class="card-title">操作记录</text>
+        </view>
+        <view class="card-body">
+          <view class="timeline">
+            <view class="timeline-item">
+              <view class="timeline-line"></view>
+              <view class="timeline-dot"></view>
+              <view class="timeline-content">
+                <text class="timeline-title">物品创建</text>
+                <text class="timeline-time">{{item.createTimeDisplay}}</text>
+              </view>
             </view>
           </view>
         </view>
       </view>
     </view>
 
-    <!-- 底部按钮 -->
-    <view class="footer">
-      <button class="footer-btn btn-edit" bindtap="onEdit">编辑</button>
-      <button class="footer-btn btn-primary" bindtap="onConsume">消耗</button>
-    </view>
+    <view class="bottom-space"></view>
   </view>
 
-  <!-- 删除确认弹窗 -->
-  <view wx:if="{{showDeleteModal}}" class="delete-modal-mask" catchtap="closeDeleteModal">
-    <view class="delete-modal-card">
-      <view class="delete-icon">🗑️</view>
-      <text class="delete-title">确认删除？</text>
-      <text class="delete-desc">删除后无法恢复，请谨慎操作</text>
-      <view class="delete-modal-btns">
-        <button class="delete-btn cancel" bindtap="closeDeleteModal">取消</button>
-        <button class="delete-btn confirm" bindtap="confirmDelete">确认删除</button>
-      </view>
-    </view>
+  <view class="action-bar">
+    <button class="action-btn action-secondary" bindtap="onEdit">
+      <text class="action-btn-text">编辑</text>
+    </button>
+    <button class="action-btn action-primary" bindtap="onConsume">
+      <text class="action-btn-text">消耗</text>
+    </button>
   </view>
 </view>

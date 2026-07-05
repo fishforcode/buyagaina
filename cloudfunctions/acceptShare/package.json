@@ -1,0 +1,9 @@
+{
+  "name": "acceptShare",
+  "version": "1.0.0",
+  "description": "接受空间分享",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

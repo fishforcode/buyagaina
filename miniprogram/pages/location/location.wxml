@@ -12,17 +12,18 @@
     <view class="header" wx:if="{{locationInfo}}">
       <view class="header-top">
         <text class="title">{{locationInfo.name}}</text>
-        <view wx:if="{{isCreator}}" class="header-actions">
-          <view class="header-btn" bindtap="onRenameTap">重命名</view>
-          <view class="header-btn" bindtap="onDeleteSpaceTap">删除</view>
+        <view class="header-actions">
+          <view wx:if="{{isCreator}}" class="header-btn" bindtap="onShareTap">分享</view>
+          <view wx:if="{{isCreator}}" class="header-btn" bindtap="onRenameTap">重命名</view>
+          <view wx:if="{{isCreator}}" class="header-btn" bindtap="onDeleteSpaceTap">删除</view>
         </view>
       </view>
-      <text class="subtitle">{{itemList.length}} 件物品</text>
+      <text class="subtitle">{{totalCount || itemList.length}} 件物品</text>
 
       <!-- 统计卡片 -->
       <view class="stats-card">
         <view class="stat-item">
-          <text class="stat-value">{{itemList.length}}</text>
+          <text class="stat-value">{{totalCount || itemList.length}}</text>
           <text class="stat-label">总物品</text>
         </view>
         <view class="stat-item">
